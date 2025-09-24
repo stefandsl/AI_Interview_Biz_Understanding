@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Interview Technique - Business Problem Solver</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-bg: #0a0e27;
+            --secondary-bg: #1a1f3a;
+            --accent: #00d4ff;
+            --accent-secondary: #ff6b6b;
+            --text-primary: #ffffff;
+            --text-secondary: #a8b2d1;
+            --chapter-bg: rgba(26, 31, 58, 0.95);
+            --highlight: #ffd700;
+        }
+
+        body {
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, var(--primary-bg) 0%, var(--secondary-bg) 100%);
+            color: var(--text-primary);
+            overflow: hidden;
+            height: 100vh;
+            position: relative;
+        }
+
+        /* Keyboard Navigation Indicators */
+        .keyboard-nav {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            display: flex;
+            gap: 10px;
+            opacity: 0.8;
+        }
+
+        .key-indicator {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid var(--accent);
+            border-radius: 8px;
+            padding: 8px 16px;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            backdrop-filter: blur(10px);
+        }
+
+        .key-indicator kbd {
+            background: var(--accent);
+            color: var(--primary-bg);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        /* Chapter Navigation */
+        .chapter-nav {
+            position: fixed;
+            left: 30px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 1000;
+            background: var(--chapter-bg);
+            border-radius: 16px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .chapter-nav h3 {
+            color: var(--accent);
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 16px;
+        }
+
+        .chapter-item {
+            padding: 8px 12px;
+            margin: 4px 0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 18px;
+            color: var(--text-secondary);
+            position: relative;
+            padding-left: 24px;
+        }
+
+        .chapter-item::before {
+            content: '';
+            position: absolute;
+            left: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--text-secondary);
+            transition: all 0.3s ease;
+        }
+
+        .chapter-item.active {
+            background: rgba(0, 212, 255, 0.2);
+            color: var(--text-primary);
+        }
+
+        .chapter-item.active::before {
+            background: var(--accent);
+            box-shadow: 0 0 10px var(--accent);
+        }
+
+        .chapter-item.completed::before {
+            background: var(--accent-secondary);
+        }
+
+        .chapter-item:hover {
+            background: rgba(0, 212, 255, 0.1);
+        }
+
+        /* Progress Bar */
+        .progress-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            z-index: 1000;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent) 0%, var(--accent-secondary) 100%);
+            transition: width 0.5s ease;
+            box-shadow: 0 0 10px var(--accent);
+        }
+
+        /* Slides Container */
+        .slides-container {
+            position: relative;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .slide {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: none;
+            padding: 60px 200px 60px 280px;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .slide.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Slide Content Styles */
+        .slide-content {
+            text-align: center;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .big-emoji {
+            font-size: 120px;
+            margin: 20px 0;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .title-slide h1 {
+            font-size: 72px;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 30px;
+            line-height: 1.2;
+        }
+
+        .subtitle {
+            font-size: 28px;
+            color: var(--text-secondary);
+            margin-top: 20px;
+        }
+
+        .quote-slide {
+            position: relative;
+        }
+
+        .quote-text {
+            font-size: 42px;
+            line-height: 1.6;
+            color: var(--text-primary);
+            font-style: italic;
+            position: relative;
+            padding: 0 60px;
+        }
+
+        .quote-text::before,
+        .quote-text::after {
+            position: absolute;
+            font-size: 120px;
+            color: var(--accent);
+            opacity: 0.2;
+        }
+
+        .quote-text::before {
+            content: '"';
+            left: -40px;
+            top: -40px;
+        }
+
+        .quote-text::after {
+            content: '"';
+            right: -40px;
+            bottom: -80px;
+        }
+
+        .quote-author {
+            font-size: 24px;
+            color: var(--accent);
+            margin-top: 30px;
+            text-align: right;
+        }
+
+        .bullet-list {
+            text-align: left;
+            font-size: 32px;
+            line-height: 1.8;
+        }
+
+        .bullet-list li {
+            margin: 20px 0;
+            list-style: none;
+            position: relative;
+            padding-left: 50px;
+            opacity: 0;
+            animation: slideInLeft 0.5s ease forwards;
+        }
+
+        .bullet-list li:nth-child(1) { animation-delay: 0.1s; }
+        .bullet-list li:nth-child(2) { animation-delay: 0.2s; }
+        .bullet-list li:nth-child(3) { animation-delay: 0.3s; }
+        .bullet-list li:nth-child(4) { animation-delay: 0.4s; }
+        .bullet-list li:nth-child(5) { animation-delay: 0.5s; }
+
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .bullet-list li::before {
+            content: '→';
+            position: absolute;
+            left: 0;
+            color: var(--accent);
+            font-size: 36px;
+        }
+
+        .highlight-box {
+            background: rgba(0, 212, 255, 0.1);
+            border: 2px solid var(--accent);
+            border-radius: 16px;
+            padding: 40px;
+            margin: 30px 0;
+            backdrop-filter: blur(10px);
+        }
+
+        .icon-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 30px;
+            margin: 40px 0;
+        }
+
+        .icon-item {
+            text-align: center;
+            padding: 20px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            transition: transform 0.3s ease, background 0.3s ease;
+        }
+
+        .icon-item:hover {
+            transform: translateY(-10px);
+            background: rgba(0, 212, 255, 0.1);
+        }
+
+        .icon-item .icon {
+            font-size: 60px;
+            margin-bottom: 16px;
+        }
+
+        .icon-item .label {
+            font-size: 24px;
+            color: var(--text-secondary);
+        }
+
+        /* System Prompt Styles */
+        .system-prompt {
+            background: #0d1117;
+            border: 2px solid #30363d;
+            border-radius: 12px;
+            padding: 40px;
+            text-align: left;
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
+            font-size: 18px;
+            line-height: 1.8;
+            color: #e6edf3;
+            overflow-y: auto;
+            overflow-x: hidden;
+            max-width: 100%;
+            max-height: calc(100vh - 250px);
+            white-space: pre-wrap;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .prompt-header {
+            color: var(--accent);
+            font-size: 28px;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-align: center;
+        }
+
+        /* Prompt Segment Styles */
+        .prompt-display {
+            background: rgba(26, 31, 58, 0.4);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            border-radius: 16px;
+            padding: 45px;
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-size: 21px;
+            line-height: 1.9;
+            color: #ffffff;
+            width: 100%;
+            text-align: left;
+            box-sizing: border-box;
+        }
+
+        .system-prompt-slide {
+            padding: 40px 290px 40px 330px;
+            align-items: stretch;
+            justify-content: flex-start;
+        }
+
+        .system-prompt-slide .slide-content {
+            max-width: none;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        .system-prompt-slide .prompt-display {
+            padding: 48px 64px;
+            margin: 0;
+        }
+
+        .system-prompt-slide .prompt-display .prompt-segment.system-prompt-list {
+            display: block;
+            margin-top: 20px;
+            margin-left: clamp(-20px, 5vw, 150px);
+            padding-left: 0px;
+            list-style-position: outside;
+        }
+
+        .system-prompt-slide .prompt-display .prompt-segment.system-prompt-list li {
+            margin-bottom: 14px;
+        }
+
+        .prompt-segment {
+            position: relative;
+            display: inline;
+            transition: all 0.3s ease;
+            padding: 2px 0;
+        }
+
+        .prompt-segment.role {
+            color: #00d4ff;
+        }
+
+        .prompt-segment.judge {
+            color: #ffd700;
+        }
+
+        .prompt-segment.format {
+            color: #ff6b6b;
+        }
+
+        .prompt-segment.plan {
+            color: #90ee90;
+        }
+
+        .prompt-segment.interaction {
+            color: #dda0dd;
+        }
+
+        .prompt-segment.stopping {
+            color: #ffa500;
+        }
+
+        .segment-label {
+            display: inline-block;
+            font-size: 14px;
+            padding: 4px 10px;
+            border-radius: 4px;
+            margin-right: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: bold;
+            vertical-align: middle;
+            opacity: 0.8;
+        }
+
+        .label-role {
+            background: rgba(0, 212, 255, 0.2);
+            color: #00d4ff;
+            border: 1px solid rgba(0, 212, 255, 0.3);
+        }
+
+        .label-judge {
+            background: rgba(255, 215, 0, 0.2);
+            color: #ffd700;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+        }
+
+        .label-format {
+            background: rgba(255, 107, 107, 0.2);
+            color: #ff6b6b;
+            border: 1px solid rgba(255, 107, 107, 0.3);
+        }
+
+        .label-plan {
+            background: rgba(144, 238, 144, 0.2);
+            color: #90ee90;
+            border: 1px solid rgba(144, 238, 144, 0.3);
+        }
+
+        .label-interaction {
+            background: rgba(221, 160, 221, 0.2);
+            color: #dda0dd;
+            border: 1px solid rgba(221, 160, 221, 0.3);
+        }
+
+        .label-stopping {
+            background: rgba(255, 165, 0, 0.2);
+            color: #ffa500;
+            border: 1px solid rgba(255, 165, 0, 0.3);
+        }
+
+        .flow-diagram {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 30px;
+            margin: 40px 0;
+            flex-wrap: wrap;
+        }
+
+        .flow-step {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid var(--accent);
+            border-radius: 12px;
+            padding: 20px 30px;
+            font-size: 26px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .flow-step:hover {
+            background: rgba(0, 212, 255, 0.1);
+            transform: translateY(-5px);
+        }
+
+        .flow-arrow {
+            font-size: 30px;
+            color: var(--accent);
+        }
+
+        .example-box {
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.05) 0%, rgba(255, 107, 107, 0.05) 100%);
+            border-radius: 16px;
+            padding: 40px;
+            margin: 30px 0;
+            border: 1px solid rgba(0, 212, 255, 0.2);
+        }
+
+        .example-title {
+            font-size: 36px;
+            color: var(--accent);
+            margin-bottom: 20px;
+        }
+
+        .insight-card {
+            background: rgba(255, 215, 0, 0.1);
+            border-left: 4px solid var(--highlight);
+            padding: 24px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+
+        .insight-card .insight-icon {
+            font-size: 36px;
+            margin-bottom: 16px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            margin: 40px 0;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            border: 1px solid rgba(0, 212, 255, 0.2);
+        }
+
+        .stat-number {
+            font-size: 48px;
+            color: var(--accent);
+            font-weight: bold;
+        }
+
+        .stat-label {
+            font-size: 24px;
+            color: var(--text-secondary);
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Keyboard Navigation -->
+    <div class="keyboard-nav">
+        <div class="key-indicator">
+            <kbd>←</kbd> <span>Previous</span>
+        </div>
+        <div class="key-indicator">
+            <kbd>→</kbd> <span>Next</span>
+        </div>
+    </div>
+
+    <!-- Chapter Navigation -->
+    <div class="chapter-nav">
+        <h3>Chapters</h3>
+        <div class="chapter-item active" data-slide="0">📜 Cicero's Wisdom</div>
+        <div class="chapter-item" data-slide="1">🧠 Blind Spots</div>
+        <div class="chapter-item" data-slide="2">👥 Traditional vs AI</div>
+        <div class="chapter-item" data-slide="3">⚙️ How It Works</div>
+        <div class="chapter-item" data-slide="4">🎨 Use Cases</div>
+        <div class="chapter-item" data-slide="5">📊 Example: Bottlenecks</div>
+        <div class="chapter-item" data-slide="6">📝 System Prompt</div>
+        <div class="chapter-item" data-slide="7">🔍 Walkthrough</div>
+        <div class="chapter-item" data-slide="8">🚀 Recap</div>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="progress-bar">
+        <div class="progress-fill"></div>
+    </div>
+
+    <!-- Slides Container -->
+    <div class="slides-container">
+
+        <!-- Slide 2: Cicero Quote -->
+        <div class="slide">
+            <div class="slide-content quote-slide">
+                <div class="quote-text">
+                    We can advise others better than we can advise ourselves.
+                </div>
+                <div class="quote-author">— Cicero, 1st Century BC</div>
+            </div>
+        </div>
+
+        <!-- Slide 3: Emotional Baggage -->
+        <div class="slide">
+            <div class="slide-content">
+                <h1>Why We're Blind to Our Problems</h1>
+                <div class="icon-grid">
+                    <div class="icon-item">
+                        <div class="icon">😤</div>
+                        <div class="label">Ego Protection</div>
+                    </div>
+                    <div class="icon-item">
+                        <div class="icon">💔</div>
+                        <div class="label">Emotional Attachment</div>
+                    </div>
+                    <div class="icon-item">
+                        <div class="icon">🌫️</div>
+                        <div class="label">Foggy Vision</div>
+                    </div>
+                    <div class="icon-item">
+                        <div class="icon">⛓️</div>
+                        <div class="label">Analysis Paralysis</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 4: Traditional vs AI -->
+        <div class="slide">
+            <div class="slide-content">
+                <h1>Getting Unstuck</h1>
+                <div style="display: flex; gap: 40px; align-items: center; justify-content: center;">
+                    <div class="example-box" style="width: 400px; min-width: 400px;">
+                        <div class="example-title">Traditional 👥</div>
+                        <ul class="bullet-list">
+                            <li style="white-space: nowrap;">Friends & Family</li>
+                            <li style="white-space: nowrap;">Therapists</li>
+                            <li style="white-space: nowrap;">Business Advisors</li>
+                            <li style="white-space: nowrap;">Mentors</li>
+                        </ul>
+                    </div>
+                    <div style="font-size: 48px; color: var(--accent);">+</div>
+                    <div class="example-box" style="width: 400px; min-width: 400px;">
+                        <div class="example-title">AI Partner 🤖</div>
+                        <ul class="bullet-list">
+                            <li style="white-space: nowrap;">24/7 Available</li>
+                            <li style="white-space: nowrap;">Zero Judgment</li>
+                            <li style="white-space: nowrap;">Infinite Patience</li>
+                            <li style="white-space: nowrap;">Domain Expertise</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 7: How It Works -->
+        <div class="slide">
+            <div class="slide-content">
+                <h1>The Process Flow</h1>
+                <div class="flow-diagram">
+                    <div class="flow-step">1️⃣ Define Role</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">2️⃣ Context Setup</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">3️⃣ Q&A Dance</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">4️⃣ Clarity!</div>
+                </div>
+                <div class="insight-card" style="margin-top: 40px;">
+                    <div class="insight-icon">🎯</div>
+                    <p style="font-size: 30px;">AI adapts each question based on YOUR answers</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 8: Use Cases -->
+        <div class="slide">
+            <div class="slide-content">
+                <h1>Universal Application</h1>
+                <div class="icon-grid">
+                    <div class="icon-item">
+                        <div class="icon">💑</div>
+                        <div class="label">Relationships</div>
+                    </div>
+                    <div class="icon-item">
+                        <div class="icon">💪</div>
+                        <div class="label">Habits</div>
+                    </div>
+                    <div class="icon-item">
+                        <div class="icon">💰</div>
+                        <div class="label">Finances</div>
+                    </div>
+                    <div class="icon-item">
+                        <div class="icon">✈️</div>
+                        <div class="label">Travel Planning</div>
+                    </div>
+                    <div class="icon-item">
+                        <div class="icon">🏠</div>
+                        <div class="label">Life Decisions</div>
+                    </div>
+                    <div class="icon-item">
+                        <div class="icon">👥</div>
+                        <div class="label">Interpersonal</div>
+                    </div>
+                </div>
+                <div class="highlight-box">
+                    <p style="font-size: 34px;">Today's Focus: <span style="color: var(--accent);">Business Bottlenecks</span></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 9: Example Introduction -->
+        <div class="slide">
+            <div class="slide-content">
+                <div class="example-box">
+                    <div class="example-title">Example: Finding Bottlenecks 🔍</div>
+                    <div style="margin-top: 30px;">
+                        <ul class="bullet-list">
+                            <li>Identify primary business goal (12 months)</li>
+                            <li>Uncover hidden bottlenecks</li>
+                            <li>Rank by impact if relieved</li>
+                            <li>Map activities for top 2 priorities</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="insight-card" style="margin-top: 40px;">
+                    <div class="insight-icon">🎯</div>
+                    <p style="font-size: 30px;">Where to focus resources</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 10: System Prompt 1 -->
+        <div class="slide system-prompt-slide">
+            <div class="slide-content">
+                <div class="prompt-display">
+                    <div style="margin-bottom: 20px;">
+                        <span class="segment-label label-role">role</span>
+                        <span class="prompt-segment role">You are an expert interviewer specializing in business, tasked with interviewing a business leader or owner.</span>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <span class="segment-label label-judge">judge</span>
+                        <span class="prompt-segment judge">Begin with a concise checklist (3-7 bullets) outlining the steps you will take in the interview process.</span>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <span class="segment-label label-format">format</span>
+                        <span class="prompt-segment format">Ask one question at a time, using each response to inform your subsequent question.</span>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <div>
+                            <span class="segment-label label-plan">plan</span>
+                            <span class="prompt-segment plan">Your primary objectives are:</span>
+                        </div>
+                        <ol class="prompt-segment plan system-prompt-list">
+                            <li>Identify the business's main goal for the next 12 months.</li>
+                            <li>Explore and uncover the key bottlenecks preventing achievement of this goal.</li>
+                            <li>Help the interviewee prioritize these bottlenecks by impact—focus on which, if resolved, would move them closest to their main goal.</li>
+                            <li>Once bottlenecks are prioritized, concentrate on the top two. For each, ask detailed questions about the activities and processes involved.</li>
+                        </ol>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <span class="segment-label label-interaction">interaction</span>
+                        <span class="prompt-segment interaction">If the interviewee appears confused or uncertain about an answer, use your expertise to guide them thoughtfully, leveraging previous context for clarification.</span>
+                    </div>
+
+                    <div>
+                        <span class="segment-label label-stopping">stopping</span>
+                        <span class="prompt-segment stopping">Limit the total number of questions to fewer than 30. After key milestones—such as identifying the main goal, surfacing bottlenecks, and completing the prioritization—provide a 1-2 sentence micro-update summarizing progress and outlining the next step.</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 11: Example Walkthrough -->
+        <div class="slide">
+            <div class="slide-content">
+                <h1>The Conversation Flow</h1>
+                <div class="flow-diagram">
+                    <div class="flow-step">Goal: More Clients 🎯</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">Found: Friction Issue 🚧</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">Reality: Too Much Too Early ⏰</div>
+                </div>
+                <div class="highlight-box" style="margin-top: 40px;">
+                    <p style="font-size: 30px;">If taking &lt; 8 calls/day = Remove friction</p>
+                </div>
+            </div>
+        </div>
+
+         <!-- Slide: Recap -->
+        <div class="slide">
+            <div class="slide-content">
+                <h1>AI Interview Toolkit</h1>
+                <div class="highlight-box">
+                    <div class="flow-diagram">
+                        <div class="flow-step">Pick Challenge</div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-step">Set Role</div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-step">Answer Honestly</div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-step">Get Clarity</div>
+                    </div>
+                </div>
+                <div class="icon-grid" style="margin-top: 40px;">
+                    <div class="icon-item">
+                        <div class="icon">🔄</div>
+                        <div class="label">Malleable Process</div>
+                    </div>
+                    <div class="icon-item">
+                        <div class="icon">🌍</div>
+                        <div class="label">Universal Application</div>
+                    </div>
+                    <div class="icon-item">
+                        <div class="icon">💡</div>
+                        <div class="label">Clear Thinking</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+        const chapterItems = document.querySelectorAll('.chapter-item');
+        const progressFill = document.querySelector('.progress-fill');
+
+        function updateSlide(index) {
+            // Hide all slides
+            slides.forEach(slide => slide.classList.remove('active'));
+
+            // Show current slide
+            slides[index].classList.add('active');
+
+            // Update chapter navigation
+            chapterItems.forEach(item => {
+                item.classList.remove('active');
+                const slideIndex = parseInt(item.dataset.slide);
+                if (slideIndex < index) {
+                    item.classList.add('completed');
+                } else {
+                    item.classList.remove('completed');
+                }
+            });
+            chapterItems[index].classList.add('active');
+
+            // Update progress bar
+            const progress = ((index + 1) / totalSlides) * 100;
+            progressFill.style.width = progress + '%';
+
+            // Save current slide
+            currentSlide = index;
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft' && currentSlide > 0) {
+                updateSlide(currentSlide - 1);
+            } else if (e.key === 'ArrowRight' && currentSlide < totalSlides - 1) {
+                updateSlide(currentSlide + 1);
+            }
+        });
+
+        // Chapter navigation click
+        chapterItems.forEach(item => {
+            item.addEventListener('click', () => {
+                const slideIndex = parseInt(item.dataset.slide);
+                updateSlide(slideIndex);
+            });
+        });
+
+        // Touch/swipe support for mobile
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        document.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+
+        document.addEventListener('touchend', (e) => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        });
+
+        function handleSwipe() {
+            const swipeThreshold = 50;
+            const diff = touchStartX - touchEndX;
+
+            if (Math.abs(diff) > swipeThreshold) {
+                if (diff > 0 && currentSlide < totalSlides - 1) {
+                    // Swipe left - next slide
+                    updateSlide(currentSlide + 1);
+                } else if (diff < 0 && currentSlide > 0) {
+                    // Swipe right - previous slide
+                    updateSlide(currentSlide - 1);
+                }
+            }
+        }
+
+        // Initialize
+        updateSlide(0);
+    </script>
+</body>
+</html>
